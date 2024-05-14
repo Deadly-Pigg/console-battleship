@@ -2,7 +2,9 @@
 {
     private static void Main(string[] args)
     {
-        for(int i = 0; i < 10; i++)
-            Console.WriteLine("hello, world!");
+        BoardGen boardGen = new BoardGen();
+        boardGen.PrintBoard();
+        Console.WriteLine("terminate" + boardGen.boardSize);
+        Environment.Exit(0);
     }
 }
