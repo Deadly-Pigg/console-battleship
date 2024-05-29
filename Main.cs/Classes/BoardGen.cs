@@ -40,13 +40,14 @@ public class BoardGen
             Console.WriteLine($"{i}:\t" + String.Join(split, enemy.board[i].Select(a => a < 4 ? states[a] : ' ').ToArray()));
     }
 
-    public bool SetupBoard(int shipType, int x, int y, int direction)
+
+    public Status SetupBoard(int shipType, int x, int y, int direction)
     {
         // Name = shipType, length
-        // DESTROYER = 1, = 2 
-        // SUBMARINE = 2, = 3
-        // BATTLESHIP = 3, = 4
-        // CARRIER = 4, = 5
+        // DESTROYER = 1, 2 
+        // SUBMARINE = 2, 3
+        // BATTLESHIP = 3, 4
+        // CARRIER = 4, 5
 
         // directions:
         // up == N
@@ -55,31 +56,27 @@ public class BoardGen
         // left == W
 
         int dX = (direction % 2) * (2 - direction);
-        int dY = (1 - direction % 2) * (1 - direction);
+        int dY = (1 - direction % 2) * -(1 - direction);
 
-        for(int i = 0; i < shipType+1; i++) //validating if the current position for the ship is valid. 
+        for(int i = 0; i < shipType; i++) //validating if the current position for the ship is valid. Is for the random generation of a board.
         {
-            
             int newX = x+dX*i;
             int newY = y+dY*i;
-            Console.WriteLine($"[{newX},{newY}]");
             if(newX < 0 || newY < 0 || newX >= boardSize || newY >= boardSize)
             {
-                Console.WriteLine("invalid location; ship will overlap with edge of board");
-                return false;
+                //Console.WriteLine("invalid location; ship will overlap with edge of board");
+                return Status.OUT_OF_BOUNDS;
             }
-            else if(board[newX][newY] != 0)
+            else if(board[newY][newX] != 0)
             {
-                Console.WriteLine("invalid location; ship will overlap with another ship.");
-                return false;
+                //Console.WriteLine("invalid location; ship will overlap with another ship.");
+                return Status.OCCUPIED_CELL;
             }
-            Console.WriteLine("yo!");
         }
 
-        for(int i = 0; i < shipType+1; i++)
-            board[x+dX*i][y + dY*i] = shipType+1; // 3 represents a ship
+        for(int i = 0; i < shipType; i++)
+            board[y + dY*i][x+dX*i] = 3; // 3 represents a ship
 
-        return true;
-
+        return Status.SUCCESS;
     }    
 }
