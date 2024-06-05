@@ -1,56 +1,115 @@
-﻿internal class Program
+﻿using System.Text.RegularExpressions;
+using static Ships;
+
+internal class Program
 {
     private static void Main(string[] args)
     {
         int bSize = 10; //default board size.
-        BoardGen playerBoard = new BoardGen(bSize);
-        /*
+
+        BoardGen playerBoard = new BoardGen(bSize); //instantiating
         BoardGen enemyBoard = new BoardGen(bSize);
-
         Random rand = new Random();
-        for(int i = 0; i < bSize; i++)
+        GameState state;
+
+        Ships ships = new Ships(); //global ships
+        ships.AddShip(
+        [
+            new ShipType("Destroyer", 1, 2),
+            new ShipType("Submarine", 1, 3),
+            new ShipType("Cruiser", 0, 3),
+            new ShipType("Battleship", 0, 4),
+            new ShipType("Carrier", 0, 5),
+        ]);
+
+        while(true)
         {
-            while(!enemyBoard.SetupBoard(rand.Next(2,5),rand.Next(bSize),rand.Next(bSize),rand.Next(4))) {}
+            int slots = PlaceShips(playerBoard, new Ships(ships)); //let player make board.
+            foreach(ShipType ship in ships.AllShips)
+            {
+                for(int i = 0; i < ship.Count; i++)
+                {
+                    Status temp = (Status)1;
+                    while(temp != 0)
+                        temp = enemyBoard.SetupBoard(ship.Length, rand.Next(0, bSize), rand.Next(0, bSize), rand.Next(0,3));
+                }
+            }
+            Console.WriteLine(slots);
+            enemyBoard.PrintBoard(); //debugging reasons; remove if you will actually play the game
+            state = PlayGame(playerBoard, enemyBoard, slots);
+            if(state == GameState.PLAYER_WIN)
+                Console.WriteLine("PLAYER HAS WON!");
+            else
+                Console.WriteLine("COMPUTER HAS WON!");
+            break;
         }
-
-        enemyBoard.PrintBoard();
-        playerBoard.PrintBoard(enemyBoard);*/
-
-        PlayGame(playerBoard);
 
         Console.WriteLine("terminate" + bSize);
         playerBoard.PrintBoard();
+        playerBoard.PrintBoard(playerBoard);
         Environment.Exit(0);
     }
-
-    struct ShipType
+    private static GameState PlayGame(BoardGen playerBoard, BoardGen enemyBoard, int shipCount)
     {
-        public string Name;
-        public int Count;
-        public int Length;
+        Random rand = new();
+        int countP = shipCount;
+        int countE = shipCount;
+        GameState fired;
+        while(countP > 0 && countE > 0)
+        {   
+            while(countP > 0)
+            {
+                playerBoard.PrintBoard(enemyBoard);
+                Thread.Sleep(1000);
+                Console.WriteLine("Make your shot.");
+                string? read = Console.ReadLine();
+                if(read.Length != 2 || !char.IsLetter(read[0]) || !char.IsNumber(read[1]))
+                {
+                    Console.WriteLine("Invalid coordinate. Choose a coordinate provided on the gameboard.");
+                    continue;
+                }
+                fired = playerBoard.FireShot(char.ToUpper(read[0]) - 'A', read[1] - '0', enemyBoard); 
+                if((int)fired > 1)
+                {
+                    if(fired == GameState.ALREADY_SHOT)
+                        Console.WriteLine("Cannot shoot at the same location!");
+                    else if(fired == GameState.OUT_OF_BOUNDS)
+                        Console.WriteLine("Shot is out of bounds.");
+                    continue;
+                }
+                if(fired == GameState.HIT)
+                    countE--;
+                break;
+            }
+            Thread.Sleep(2000);
+            while(countE > 0)
+            {
+                Console.WriteLine("Enemy will now make their shot...");
+                Thread.Sleep(2000);
 
-        public ShipType(string name, int count, int len)
-        {
-            Name = name;
-            Count = count;
-            Length = len;
+                fired = (GameState)2; //allow it allow it allow it allow it allow it allow it
+
+                while((int)fired > 1)
+                {
+                    fired = enemyBoard.FireShot(rand.Next(0, 10), rand.Next(0,10), playerBoard);
+                }
+                if(fired == GameState.HIT)
+                    countP--;
+                break;
+            }
+            Thread.Sleep(2000);
         }
+        if(countE == 0)
+            return GameState.PLAYER_WIN;
+        return GameState.ENEMY_WIN;
     }
-    private static void PlayGame(BoardGen playerBoard)
+
+   
+    private static int PlaceShips(BoardGen playerBoard, Ships ships)
     {
         Console.WriteLine("Set up board");
 
-        ShipType[] ships = 
-        {
-            new ShipType("Destroyer", 1, 2),
-            new ShipType("Submarine", 1, 3),
-            new ShipType("Cruiser", 1, 3),
-            new ShipType("Battleship", 1, 4),
-            new ShipType("Carrier", 1, 5),
-        };
-        int totalCount = 0;
-        for(int i = 0; i < ships.Length; i++)
-            totalCount += ships[i].Count;
+        int totalCount = ships.Total;
 
         while(totalCount > 0)
         {
@@ -59,30 +118,31 @@
             Direction dir;
             while(true) //selection of ship type
             {
-                Console.WriteLine($"Input a number 1-{ships.Length} for a ship type.");
-                for(int i = 0; i < ships.Length; i++)
-                    Console.WriteLine($"{i+1}: {ships[i].Name},\t {ships[i].Count} left. Length: {ships[i].Length}");
+                Console.WriteLine($"Input a number 1-{ships.GetCount()} for a ship type.");
+                for(int i = 0; i < ships.GetCount(); i++)
+                    Console.WriteLine($"{i+1}: {ships.AllShips[i].Name},\t {ships.AllShips[i].Count} left. Length: {ships.AllShips[i].Length}");
 
                 string? read = Console.ReadLine();
-                if(read?.Length != 1 || read[0] - '0' < 1 || read[0] - '0' > ships.Length) //Input validation; This only works properly for up to 9 unique ships.
+                if(read?.Length != 1 || read[0] - '0' < 1 || read[0] - '0' > ships.GetCount()) //Input validation; This only works properly for up to 9 unique ships. May use regex in the future to allow an even higher amount of ships to be added.
                 {
                     Console.WriteLine("Invalid ship type. Input a number 1-5.");
                     continue;
                 }
                 ship = read[0] - '0' - 1;
-                if(ships[ship].Count == 0)
+                if(ships.AllShips[ship].Count == 0)
                 {
                     Console.WriteLine("No more ships of this type. Please select another ship.");
                     continue;
                 }
-                ships[(read[0] - '0'-1)].Count--;
+                ships.AllShips[ship] = ships.AllShips[ship].ReduceCount();
                 totalCount--;
                 break;
             }
             playerBoard.PrintBoard();
             while(true)
             {
-                Console.WriteLine($"Input a coordinate and direction on the board of coordinates in the format: (character)(number) (direction), i.e: A8NORTH or E7WEST");
+                Console.WriteLine($"Input a coordinate and direction on the board of coordinates in the format: (character)(number)(direction), i.e: A8NORTH or E7WEST");
+
                 string? read = Console.ReadLine();
                 if(read.Length < 3 || !char.IsLetter(read[0]) || !char.IsNumber(read[1]))
                 {
@@ -103,9 +163,9 @@
                     continue;
                 }
                 read = read.ToUpper();
-                pos = new int[] {read[0] - 'A', read[1] - '0'};
+                pos = [read[0] - 'A', read[1] - '0'];
 
-                Status valid = playerBoard.SetupBoard(ships[ship].Length, pos[0], pos[1], (int)dir);
+                Status valid = playerBoard.SetupBoard(ships.AllShips[ship].Length, pos[0], pos[1], (int)dir);
                 switch(valid)
                 {
                     case Status.OCCUPIED_CELL: Console.WriteLine("Invalid location; ship will overlap with another ship."); break;
@@ -119,37 +179,6 @@
                 }
             }
         }
-    }
-
-
-
-
-
-
-
-
-
-
-    private static void LeetCodeCrap() // if this accidentally gets uploaded to github, skill issue on my part.
-    {
-        Random rand = new Random();
-
-        int len = 100000; //change this. make sure it is less that or equal to 400
-
-        
-        for(int k = 0; k < 8; k++)
-        {
-            Console.Write("[");
-            for(int i = 0; i < len; i++)
-            {
-                if(i == len-1)
-                    Console.Write("{0}", rand.Next(-50,50));
-                else
-                    Console.Write("{0},", rand.Next(-50,50));
-            }
-            Console.WriteLine("]");
-        }
-
-        Environment.Exit(0);
+        return ships.GetCount();
     }
 }

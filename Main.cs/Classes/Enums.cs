@@ -12,3 +12,12 @@ public enum Direction
     SOUTH = 2,
     WEST = 3,
 }
+public enum GameState
+{
+    HIT = 0,
+    MISS = 1,
+    ALREADY_SHOT = 2,
+    OUT_OF_BOUNDS = 3,
+    PLAYER_WIN = 4,
+    ENEMY_WIN = 5,
+}
