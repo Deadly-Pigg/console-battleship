@@ -10,12 +10,12 @@ For more information (not that you care) you can visit the [wikipedia page here]
 - Make board more legible and user-friendly
 - Possible customisable board size and ship count/type?
 ### Play and complete game
-- Inform user when their ship/the enemy ship has been sunk
+- ?
 ### Make a bot to automatically play against the player
 - Make algorithm track and sink a ship when it hits a cell with a ship on it.
 - Make algorithm decide the next best slot to shoot at
 ### Misc
-- Stop spam from console
+- Stop spam from console (or make it look better)
 - Clean up code
 
 ## COMPLETED TASKS:
@@ -25,6 +25,7 @@ For more information (not that you care) you can visit the [wikipedia page here]
 ### Play and complete game
 - User can shoot at the computer's board + (Input validation)
 - User can achieve a 'Game Over' when all their ships or the enemy ships have been sunk
+- Inform user when their ship/the enemy ship has been sunk
 - Input validation
 ### Make a bot to automatically play against the player
 - Computer can play the game in a very naive manner.

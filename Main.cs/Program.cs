@@ -1,6 +1,5 @@
 ﻿using System.Text.RegularExpressions;
 using static Ships;
-
 internal class Program
 {
     private static void Main(string[] args)
@@ -31,11 +30,11 @@ internal class Program
                 {
                     Status temp = (Status)1;
                     while(temp != 0)
-                        temp = enemyBoard.SetupBoard(ship.Length, rand.Next(0, bSize), rand.Next(0, bSize), rand.Next(0,3));
+                        temp = enemyBoard.SetupBoard(ship.Length, rand.Next(0, bSize), rand.Next(0, bSize), (Direction)rand.Next(0,3), ship.Name);
                 }
             }
-            Console.WriteLine(slots);
-            enemyBoard.PrintBoard(); //debugging reasons; remove if you will actually play the game
+            //Console.WriteLine(slots);
+            //enemyBoard.PrintBoard(); //debugging reasons; remove if you will actually play the game
             state = PlayGame(playerBoard, enemyBoard, slots);
             if(state == GameState.PLAYER_WIN)
                 Console.WriteLine("PLAYER HAS WON!");
@@ -60,7 +59,7 @@ internal class Program
             while(countP > 0)
             {
                 playerBoard.PrintBoard(enemyBoard);
-                Thread.Sleep(1000);
+                //Thread.Sleep(1000);
                 Console.WriteLine("Make your shot.");
                 string? read = Console.ReadLine();
                 if(read.Length != 2 || !char.IsLetter(read[0]) || !char.IsNumber(read[1]))
@@ -81,11 +80,11 @@ internal class Program
                     countE--;
                 break;
             }
-            Thread.Sleep(2000);
+            //Thread.Sleep(2000);
             while(countE > 0)
             {
                 Console.WriteLine("Enemy will now make their shot...");
-                Thread.Sleep(2000);
+                //Thread.Sleep(2000);
 
                 fired = (GameState)2; //allow it allow it allow it allow it allow it allow it
 
@@ -97,7 +96,7 @@ internal class Program
                     countP--;
                 break;
             }
-            Thread.Sleep(2000);
+            //Thread.Sleep(2000);
         }
         if(countE == 0)
             return GameState.PLAYER_WIN;
@@ -113,6 +112,7 @@ internal class Program
 
         while(totalCount > 0)
         {
+            string shipName;
             int ship;
             int[] pos;
             Direction dir;
@@ -135,6 +135,7 @@ internal class Program
                     continue;
                 }
                 ships.AllShips[ship] = ships.AllShips[ship].ReduceCount();
+                shipName = ships.AllShips[ship].Name;
                 totalCount--;
                 break;
             }
@@ -165,7 +166,7 @@ internal class Program
                 read = read.ToUpper();
                 pos = [read[0] - 'A', read[1] - '0'];
 
-                Status valid = playerBoard.SetupBoard(ships.AllShips[ship].Length, pos[0], pos[1], (int)dir);
+                Status valid = playerBoard.SetupBoard(ships.AllShips[ship].Length, pos[0], pos[1], dir, shipName);
                 switch(valid)
                 {
                     case Status.OCCUPIED_CELL: Console.WriteLine("Invalid location; ship will overlap with another ship."); break;

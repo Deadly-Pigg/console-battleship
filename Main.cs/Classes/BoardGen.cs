@@ -4,7 +4,7 @@ public class BoardGen
 {
     public int boardSize {get; private set;} //defines the size of the board.
     protected int[][] board; //defines the board.
-
+    protected List<ShipData> ships = new();
     public BoardGen(int setSize = 10) //constructor. setSize may be used in the future for custom game sizes.
     {
         boardSize = setSize;
@@ -51,14 +51,14 @@ public class BoardGen
 
         target.board[y][x]++;
         target.PrintBoard(target);
-        Thread.Sleep(1000);
+        //Thread.Sleep(1000);
         switch(target.board[y][x])
         {
             case 1: //empty slot.
                 Console.WriteLine("Miss.");
                 break;
             case 3: //enemy ship.
-                Console.WriteLine("Hit!");
+                FindShip(x,y,target);
                 break;
             default:
                 throw new Exception("Shot has hit an unknown object, or something it was not supposed to.");
@@ -66,8 +66,28 @@ public class BoardGen
 
         return target.board[y][x] == 1 ? GameState.MISS : GameState.HIT;
     }
+    private void FindShip(int x, int y, BoardGen target)
+    {
+        //Console.WriteLine($"({x},{y})");
+        for(int i = 0; i < ships.Count; i++)
+        {
+            //Console.WriteLine(String.Join(",",target.ships[i].ShipCells));
+            if(target.ships[i].ShipCells.Contains((x,y)))
+            {
+                if(target.ships[i].HasSunk(x,y))
+                {
+                    Console.WriteLine($"{target.ships[i].Name} has been sunk!\nThere are currently only {target.ships.Count-1} ships left on the target's board!");
+                    target.ships.RemoveAt(i);
+                }
+                else
+                    Console.WriteLine("Hit!");
+                return;
+            }
+        }
+        throw new Exception("Board registered a hit, but the ships didn't");
+    }
 
-    public Status SetupBoard(int shipType, int x, int y, int direction)
+    public Status SetupBoard(int len, int x, int y, Direction dir, string shipName)
     {
         // Name = shipType, length
         // DESTROYER = 1, 2 
@@ -80,11 +100,11 @@ public class BoardGen
         // right == E
         // down == S
         // left == W
-
-        int dX = (direction % 2) * (2 - direction);
+        int direction = (int)dir;
+        int dX = direction % 2 * (2 - direction);
         int dY = (1 - direction % 2) * -(1 - direction);
 
-        for(int i = 0; i < shipType; i++) //validating if the current position for the ship is valid. Is for the random generation of a board.
+        for(int i = 0; i < len; i++) //validating if the current position for the ship is valid. Is for the random generation of a board.
         {
             int newX = x+dX*i;
             int newY = y+dY*i;
@@ -100,8 +120,11 @@ public class BoardGen
             }
         }
 
-        for(int i = 0; i < shipType; i++)
+
+        for(int i = 0; i < len; i++)
             board[y + dY*i][x+dX*i] = 2; // 2 represents a ship
+
+        ships.Add(new ShipData(x,y,len,dir,shipName));
 
         return Status.SUCCESS;
     }    
