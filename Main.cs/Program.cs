@@ -8,6 +8,7 @@ internal class Program
 
         BoardGen playerBoard = new BoardGen(bSize); //instantiating
         BoardGen enemyBoard = new BoardGen(bSize);
+        BotOpponent difficulty = new BotOpponent(Difficulty.NORMAL);
         Random rand = new Random();
         GameState state;
 
@@ -16,39 +17,36 @@ internal class Program
         [
             new ShipType("Destroyer", 1, 2),
             new ShipType("Submarine", 1, 3),
-            new ShipType("Cruiser", 0, 3),
-            new ShipType("Battleship", 0, 4),
-            new ShipType("Carrier", 0, 5),
+            new ShipType("Cruiser", 1, 3),
+            new ShipType("Battleship", 1, 4),
+            new ShipType("Carrier", 1, 5),
         ]);
 
-        while(true)
-        {
-            int slots = PlaceShips(playerBoard, new Ships(ships)); //let player make board.
-            foreach(ShipType ship in ships.AllShips)
-            {
-                for(int i = 0; i < ship.Count; i++)
-                {
-                    Status temp = (Status)1;
-                    while(temp != 0)
-                        temp = enemyBoard.SetupBoard(ship.Length, rand.Next(0, bSize), rand.Next(0, bSize), (Direction)rand.Next(0,3), ship.Name);
-                }
-            }
-            //Console.WriteLine(slots);
-            //enemyBoard.PrintBoard(); //debugging reasons; remove if you will actually play the game
-            state = PlayGame(playerBoard, enemyBoard, slots);
-            if(state == GameState.PLAYER_WIN)
-                Console.WriteLine("PLAYER HAS WON!");
-            else
-                Console.WriteLine("COMPUTER HAS WON!");
-            break;
-        }
+        int slots = PlaceShips(playerBoard, new Ships(ships)); //let player make board.
+        Console.WriteLine(slots + " total ship cells.");
 
-        Console.WriteLine("terminate" + bSize);
+        foreach(ShipType ship in ships.AllShips)
+        {
+            for(int i = 0; i < ship.Count; i++)
+            {
+                Status temp = (Status)1;
+                while(temp != 0)
+                    temp = enemyBoard.SetupBoard(ship.Length, rand.Next(0,bSize), rand.Next(0, bSize), (Direction)rand.Next(0,4), ship.Name);
+            }
+        }
+        //Console.WriteLine(slots);
+        enemyBoard.PrintBoard(); //debugging reasons; remove if you will actually play the game
+        state = PlayGame(playerBoard, enemyBoard, slots, difficulty);
+        if(state == GameState.PLAYER_WIN)
+            Console.WriteLine("PLAYER HAS WON!");
+        else
+            Console.WriteLine("COMPUTER HAS WON!");
+
         playerBoard.PrintBoard();
         playerBoard.PrintBoard(playerBoard);
         Environment.Exit(0);
     }
-    private static GameState PlayGame(BoardGen playerBoard, BoardGen enemyBoard, int shipCount)
+    private static GameState PlayGame(BoardGen playerBoard, BoardGen enemyBoard, int shipCount, BotOpponent difficulty)
     {
         Random rand = new();
         int countP = shipCount;
@@ -67,7 +65,7 @@ internal class Program
                     Console.WriteLine("Invalid coordinate. Choose a coordinate provided on the gameboard.");
                     continue;
                 }
-                fired = playerBoard.FireShot(char.ToUpper(read[0]) - 'A', read[1] - '0', enemyBoard); 
+                (int throwaway, fired) = playerBoard.FireShot(char.ToUpper(read[0]) - 'A', read[1] - '0', enemyBoard); 
                 if((int)fired > 1)
                 {
                     if(fired == GameState.ALREADY_SHOT)
@@ -76,7 +74,7 @@ internal class Program
                         Console.WriteLine("Shot is out of bounds.");
                     continue;
                 }
-                if(fired == GameState.HIT)
+                if(fired != GameState.MISS)
                     countE--;
                 break;
             }
@@ -85,14 +83,7 @@ internal class Program
             {
                 Console.WriteLine("Enemy will now make their shot...");
                 //Thread.Sleep(2000);
-
-                fired = (GameState)2; //allow it allow it allow it allow it allow it allow it
-
-                while((int)fired > 1)
-                {
-                    fired = enemyBoard.FireShot(rand.Next(0, 10), rand.Next(0,10), playerBoard);
-                }
-                if(fired == GameState.HIT)
+                if(difficulty.BotMove(playerBoard) != GameState.MISS)
                     countP--;
                 break;
             }
@@ -109,6 +100,7 @@ internal class Program
         Console.WriteLine("Set up board");
 
         int totalCount = ships.Total;
+        int cells = 0;
 
         while(totalCount > 0)
         {
@@ -165,8 +157,9 @@ internal class Program
                 }
                 read = read.ToUpper();
                 pos = [read[0] - 'A', read[1] - '0'];
-
+                
                 Status valid = playerBoard.SetupBoard(ships.AllShips[ship].Length, pos[0], pos[1], dir, shipName);
+                cells += ships.AllShips[ship].Length;
                 switch(valid)
                 {
                     case Status.OCCUPIED_CELL: Console.WriteLine("Invalid location; ship will overlap with another ship."); break;
@@ -180,6 +173,6 @@ internal class Program
                 }
             }
         }
-        return ships.GetCount();
+        return cells;
     }
 }

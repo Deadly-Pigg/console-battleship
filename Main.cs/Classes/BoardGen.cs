@@ -41,32 +41,35 @@ public class BoardGen
             Console.WriteLine($"{i}:\t" + String.Join(split, enemy.board[i].Select(a => a < 4 ? states[a] : '?').ToArray()));
     }
 
-    public GameState FireShot(int x, int y, BoardGen target)
+    public (int, GameState) FireShot(int x, int y, BoardGen target)
     {
         if(x < 0 || y < 0 || x >= boardSize || y >= boardSize)
-            return GameState.OUT_OF_BOUNDS;
+            return (0,GameState.OUT_OF_BOUNDS);
             
         if(target.board[y][x] % 2 == 1)
-            return GameState.ALREADY_SHOT;
+            return (0,GameState.ALREADY_SHOT);
 
+        GameState shotStatus;
+        int shipLen = 0;
         target.board[y][x]++;
-        target.PrintBoard(target);
+        target.PrintBoard();
         //Thread.Sleep(1000);
         switch(target.board[y][x])
         {
             case 1: //empty slot.
                 Console.WriteLine("Miss.");
+                shotStatus = GameState.MISS;
                 break;
             case 3: //enemy ship.
-                FindShip(x,y,target);
+                (shipLen, shotStatus) = FindShip(x,y,target);
                 break;
             default:
                 throw new Exception("Shot has hit an unknown object, or something it was not supposed to.");
         }
 
-        return target.board[y][x] == 1 ? GameState.MISS : GameState.HIT;
+        return (shipLen, shotStatus);
     }
-    private void FindShip(int x, int y, BoardGen target)
+    private (int, GameState) FindShip(int x, int y, BoardGen target)
     {
         //Console.WriteLine($"({x},{y})");
         for(int i = 0; i < ships.Count; i++)
@@ -77,11 +80,12 @@ public class BoardGen
                 if(target.ships[i].HasSunk(x,y))
                 {
                     Console.WriteLine($"{target.ships[i].Name} has been sunk!\nThere are currently only {target.ships.Count-1} ships left on the target's board!");
+                    int len = target.ships[i].Length;
                     target.ships.RemoveAt(i);
+                    return (len,GameState.SINK);
                 }
-                else
-                    Console.WriteLine("Hit!");
-                return;
+                Console.WriteLine("Hit!");
+                return (0,GameState.HIT);
             }
         }
         throw new Exception("Board registered a hit, but the ships didn't");

@@ -3,6 +3,7 @@ public class ShipData
 {
     public HashSet<(int,int)> ShipCells = new();
     public string Name;
+    public int Length;
     public ShipData(int startX, int startY, int length, Direction dir, string name)
     {
         int direction = (int)dir;
@@ -16,6 +17,7 @@ public class ShipData
             ShipCells.Add((newX,newY));
         }
         Name = name;
+        Length = length;
     }
     public bool HasSunk(int x, int y)
     {
