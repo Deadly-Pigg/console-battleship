@@ -12,7 +12,6 @@ For more information (not that you care) you can visit the [wikipedia page here]
 ### Play and complete game
 - ?
 ### Make a bot to automatically play against the player
-- Make algorithm decide the next best slot to shoot at (for Hard difficulty)
 - Make algorithm strategically place ships down (or make sure they aren't in contact): Low priority
 ### Misc
 - Stop spam from console (or make it look better)
@@ -32,4 +31,5 @@ For more information (not that you care) you can visit the [wikipedia page here]
 ### Make a bot to automatically play against the player
 - Computer can play the game in a very random manner. (for Easy difficulty)
 - Make algorithm track and sink a ship when it hits a cell with a ship on it. (for Normal+ difficulty)
+- Make algorithm decide the next best slot to shoot at (for Hard difficulty)
 - Expanding upon above: Make it work for stupid players who place ships in-contact with eachother

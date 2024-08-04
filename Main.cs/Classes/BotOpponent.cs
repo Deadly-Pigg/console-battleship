@@ -1,12 +1,9 @@
 
-public class BotOpponent
+public class BotOpponent(Difficulty diff)
 {
-    Difficulty Diff;
-    public BotOpponent(Difficulty diff)
-    {
-        Diff = diff;
-    }
-    public GameState BotMove(BoardGen oppBoard)
+    Difficulty Diff = diff; //difficulty of the bot
+    Random rand = new Random();
+    public GameState BotMove(BoardGen oppBoard) //selects appropriate algorithm based on the user's choice
     {
         switch(Diff)
         {
@@ -23,13 +20,13 @@ public class BotOpponent
         }
     }
 
-    Random rand = new Random();
+    
     private GameState Easy(BoardGen oppBoard)
     {
         GameState fired = (GameState)2; //allow it allow it allow it allow it allow it allow it
 
         while((int)fired > 1) //randomly fires until it finds a valid location lmfao
-            (int throwaway, fired) = oppBoard.FireShot(rand.Next(0, oppBoard.boardSize), rand.Next(0,oppBoard.boardSize), oppBoard);
+            (_, fired) = oppBoard.FireShot(rand.Next(0, oppBoard.boardSize), rand.Next(0,oppBoard.boardSize), oppBoard);
         return fired;
     }
 
@@ -37,7 +34,6 @@ public class BotOpponent
     bool vertical = false;
     private GameState Normal(BoardGen oppBoard)
     {
-        Console.WriteLine(hitCoords.Count());
         GameState fired = (GameState)2; 
         if(hitCoords.Count > 0)
         {
@@ -49,7 +45,7 @@ public class BotOpponent
         {
             x = rand.Next(0, oppBoard.boardSize);
             y = rand.Next(0, oppBoard.boardSize);
-            (int throwaway, fired) = oppBoard.FireShot(x, y, oppBoard);
+            (_, fired) = oppBoard.FireShot(x, y, oppBoard);
             if(fired == GameState.HIT)
             {
                 hitCoords.Add((x,y));
@@ -57,7 +53,7 @@ public class BotOpponent
         }
         
         
-        Console.WriteLine(String.Join(",",hitCoords.ToList()));
+        //Console.WriteLine(String.Join(",",hitCoords.ToList()));
 
         return fired;
     }
@@ -103,9 +99,6 @@ public class BotOpponent
                 y = vertical ? max+1 : y;
                 (len, fired) = oppBoard.FireShot(x,y,oppBoard);
             }
-
-            if((int)fired > 1) //means that no ship can be sunk on this direction.
-                Console.WriteLine("oops" + y + "," + x + ", max:" + max + " min:" + min + ", vertical:" + vertical);
         }
         if((int)fired > 1) //search around previous hit location for a new cell to hit.
         {
@@ -118,7 +111,6 @@ public class BotOpponent
                 nextStrike.RemoveAt(ind);
                 x += tempX;
                 y += tempY;
-                Console.WriteLine(x + "," + y);
                 (len, fired) = oppBoard.FireShot(x, y, oppBoard);
                 if(fired == GameState.HIT)
                     vertical = tempX == 0;
@@ -130,7 +122,6 @@ public class BotOpponent
         }
         if(fired == GameState.SINK) //removes the sunk ship from the list of ships or whatever
         {
-            Console.WriteLine(hitCoords.Count + "," + len);
             for(int i = 0; i < len; i++)
             {
                 if(shoot == 0) //remove cells going left or up from hitCoords
@@ -138,16 +129,69 @@ public class BotOpponent
                 else
                     hitCoords.Remove((vertical ? x : x + i, vertical ? y + i : y));
             }
-            Console.WriteLine(hitCoords);
         }
         return fired;
     }
+    /*
+        HARD DIFFICULTY
+    */
+    int[] currShips;
+    int minDist = 0;
     private GameState Hard(BoardGen oppBoard)
     {
-        throw new Exception("Not made yet either.");
+        GameState fired = (GameState)2; 
+        if(hitCoords.Count > 0)
+            fired = Tracking(oppBoard);
+
+        int x, y, boardVal;
+        while((int)fired > 1)
+        {
+            boardVal = rand.Next(0, oppBoard.boardSize * oppBoard.boardSize / minDist) * minDist;
+            x = boardVal / oppBoard.boardSize;
+            y = boardVal % oppBoard.boardSize;
+            (_, fired) = oppBoard.FireShot(x, y, oppBoard);
+            if(fired == GameState.HIT)
+            {
+                hitCoords.Add((x,y));
+            }
+        }
+
+        if(fired == GameState.SINK)
+        {
+            currShips[minDist]--;
+            while(minDist < currShips.Length && currShips[minDist] == 0)
+                minDist++;
+            Console.WriteLine(minDist);
+        }
+
+        return fired;
     }
+    public void Initialise(int boardSize, Ships ships) //for initialising hard difficulties' smart targetting algorithm
+    {
+        currShips = new int[boardSize];
+
+        foreach(Ships.ShipType ship in ships.AllShips)
+            currShips[ship.Length-1] += ship.Count;
+
+        for(int i = 1; i < boardSize; i++)
+        {
+            if(currShips[i] == 0)
+                continue;
+            minDist = i;
+            return;
+        }
+    }
+
+    /*
+        Honourary 'Fuck you' Difficulty. Code is copied from Easy difficulty
+    */
     private GameState Impossible(BoardGen oppBoard)
     {
-        throw new Exception("oops");
+        GameState fired = GameState.ENEMY_WIN; //Since the bot never loses
+
+        while((int)fired > 0) //if the bot misses, it shoots again
+            (_, fired) = oppBoard.FireShot(rand.Next(0, oppBoard.boardSize), rand.Next(0,oppBoard.boardSize), oppBoard);
+
+        return fired;
     }
 }

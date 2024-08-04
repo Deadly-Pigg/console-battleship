@@ -41,7 +41,7 @@ public class BoardGen
             Console.WriteLine($"{i}:\t" + String.Join(split, enemy.board[i].Select(a => a < 4 ? states[a] : '?').ToArray()));
     }
 
-    public (int, GameState) FireShot(int x, int y, BoardGen target)
+    public (int, GameState) FireShot(int x, int y, BoardGen target, bool isPlayer = false)
     {
         if(x < 0 || y < 0 || x >= boardSize || y >= boardSize)
             return (0,GameState.OUT_OF_BOUNDS);
@@ -52,8 +52,11 @@ public class BoardGen
         GameState shotStatus;
         int shipLen = 0;
         target.board[y][x]++;
-        target.PrintBoard();
-        //Thread.Sleep(1000);
+        if(isPlayer)
+            target.PrintBoard(target); //shows enemy board (unhit ships invisible)
+        else
+            target.PrintBoard(); //shows board with all ships
+        Thread.Sleep(500);
         switch(target.board[y][x])
         {
             case 1: //empty slot.
@@ -72,7 +75,7 @@ public class BoardGen
     private (int, GameState) FindShip(int x, int y, BoardGen target)
     {
         //Console.WriteLine($"({x},{y})");
-        for(int i = 0; i < ships.Count; i++)
+        for(int i = 0; i < target.ships.Count; i++)
         {
             //Console.WriteLine(String.Join(",",target.ships[i].ShipCells));
             if(target.ships[i].ShipCells.Contains((x,y)))
