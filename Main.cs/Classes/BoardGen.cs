@@ -4,7 +4,7 @@ public class BoardGen
 {
     public int boardSize {get; private set;} //defines the size of the board.
     protected int[][] board; //defines the board.
-
+    protected List<ShipData> ships = new();
     public BoardGen(int setSize = 10) //constructor. setSize may be used in the future for custom game sizes.
     {
         boardSize = setSize;
@@ -41,33 +41,60 @@ public class BoardGen
             Console.WriteLine($"{i}:\t" + String.Join(split, enemy.board[i].Select(a => a < 4 ? states[a] : '?').ToArray()));
     }
 
-    public GameState FireShot(int x, int y, BoardGen target)
+    public (int, GameState) FireShot(int x, int y, BoardGen target, bool isPlayer = false)
     {
         if(x < 0 || y < 0 || x >= boardSize || y >= boardSize)
-            return GameState.OUT_OF_BOUNDS;
+            return (0,GameState.OUT_OF_BOUNDS);
             
         if(target.board[y][x] % 2 == 1)
-            return GameState.ALREADY_SHOT;
+            return (0,GameState.ALREADY_SHOT);
 
+        GameState shotStatus;
+        int shipLen = 0;
         target.board[y][x]++;
-        target.PrintBoard(target);
-        Thread.Sleep(1000);
+        if(isPlayer)
+            target.PrintBoard(target); //shows enemy board (unhit ships invisible)
+        else
+            target.PrintBoard(); //shows board with all ships
+        Thread.Sleep(500);
         switch(target.board[y][x])
         {
             case 1: //empty slot.
                 Console.WriteLine("Miss.");
+                shotStatus = GameState.MISS;
                 break;
             case 3: //enemy ship.
-                Console.WriteLine("Hit!");
+                (shipLen, shotStatus) = FindShip(x,y,target);
                 break;
             default:
                 throw new Exception("Shot has hit an unknown object, or something it was not supposed to.");
         }
 
-        return target.board[y][x] == 1 ? GameState.MISS : GameState.HIT;
+        return (shipLen, shotStatus);
+    }
+    private (int, GameState) FindShip(int x, int y, BoardGen target)
+    {
+        //Console.WriteLine($"({x},{y})");
+        for(int i = 0; i < target.ships.Count; i++)
+        {
+            //Console.WriteLine(String.Join(",",target.ships[i].ShipCells));
+            if(target.ships[i].ShipCells.Contains((x,y)))
+            {
+                if(target.ships[i].HasSunk(x,y))
+                {
+                    Console.WriteLine($"{target.ships[i].Name} has been sunk!\nThere are currently only {target.ships.Count-1} ships left on the target's board!");
+                    int len = target.ships[i].Length;
+                    target.ships.RemoveAt(i);
+                    return (len,GameState.SINK);
+                }
+                Console.WriteLine("Hit!");
+                return (0,GameState.HIT);
+            }
+        }
+        throw new Exception("Board registered a hit, but the ships didn't");
     }
 
-    public Status SetupBoard(int shipType, int x, int y, int direction)
+    public Status SetupBoard(int len, int x, int y, Direction dir, string shipName)
     {
         // Name = shipType, length
         // DESTROYER = 1, 2 
@@ -80,11 +107,11 @@ public class BoardGen
         // right == E
         // down == S
         // left == W
-
-        int dX = (direction % 2) * (2 - direction);
+        int direction = (int)dir;
+        int dX = direction % 2 * (2 - direction);
         int dY = (1 - direction % 2) * -(1 - direction);
 
-        for(int i = 0; i < shipType; i++) //validating if the current position for the ship is valid. Is for the random generation of a board.
+        for(int i = 0; i < len; i++) //validating if the current position for the ship is valid. Is for the random generation of a board.
         {
             int newX = x+dX*i;
             int newY = y+dY*i;
@@ -100,8 +127,11 @@ public class BoardGen
             }
         }
 
-        for(int i = 0; i < shipType; i++)
+
+        for(int i = 0; i < len; i++)
             board[y + dY*i][x+dX*i] = 2; // 2 represents a ship
+
+        ships.Add(new ShipData(x,y,len,dir,shipName));
 
         return Status.SUCCESS;
     }    
