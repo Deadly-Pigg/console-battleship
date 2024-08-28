@@ -10,15 +10,15 @@ public class Ships
             Total = s.Total;
         }
     }
-    public struct ShipType(string name, int count, int len, int max = -1) //ship details.
+    public struct ShipType(string name, int len, int count, int max = -1) //ship details.
     {
         public string Name = name;
-        public int Count = count;
         public int Length = len;
+        public int Count = count;
         public int Max = max == -1 ? count : max;
         public ShipType ReduceCount() //structs are primarily 'get', so doing Count-- doesn't work. This is my way of by-passing this issue.
         {
-            return new ShipType(Name, Count-1, Length, Max);
+            return new ShipType(Name, Length, Count-1, Max);
         }
     }
     public void AddShip(ShipType ship)
