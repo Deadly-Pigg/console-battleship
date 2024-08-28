@@ -27,7 +27,7 @@ public class BoardGen
             Console.WriteLine($"{i}:\t" + String.Join(split, board[i].Select(a => a < 4 ? states[a] : '?').ToArray()));
     }
 
-    public void PrintBoard(BoardGen enemy) //Shows the state of the enemy's board. Only difference is that it doesn's show hidden ships.
+    public static void PrintBoard(BoardGen enemy) //Shows the state of the enemy's board. Only difference is that it doesn's show hidden ships.
     {
         char[] states = {' ','+',' ','#'}; //for the states of each cell in the board:
         char split = ' ';
@@ -35,10 +35,15 @@ public class BoardGen
         *  . == Shot
         *  # == Hit a ship
         */
-        Console.Write("\t" + String.Join(split, Enumerable.Range(0,boardSize).Select(a => (char)(a+'A')).ToArray()) + "\n\n");
+        Console.Write("\t" + String.Join(split, Enumerable.Range(0,enemy.boardSize).Select(a => (char)(a+'A')).ToArray()) + "\n\n");
 
-        for(int i = 0; i < boardSize; i++) //im not a psychopath; I'm not gonna use pure LINQ to print EVERYTHING
+        for(int i = 0; i < enemy.boardSize; i++) //im not a psychopath; I'm not gonna use pure LINQ to print EVERYTHING
             Console.WriteLine($"{i}:\t" + String.Join(split, enemy.board[i].Select(a => a < 4 ? states[a] : '?').ToArray()));
+    }
+    public void ClearBoard()
+    {
+        for(int i = 0; i < boardSize; i++)
+            board[i] = new int[boardSize];
     }
 
     public (int, GameState) FireShot(int x, int y, BoardGen target, bool isPlayer = false)
@@ -53,7 +58,7 @@ public class BoardGen
         int shipLen = 0;
         target.board[y][x]++;
         if(isPlayer)
-            target.PrintBoard(target); //shows enemy board (unhit ships invisible)
+            PrintBoard(target); //shows enemy board (unhit ships invisible)
         else
             target.PrintBoard(); //shows board with all ships
         Thread.Sleep(500);

@@ -7,12 +7,13 @@ For more information (not that you care) you can visit the [wikipedia page here]
 
 ## TODO: 
 ### Make and setup board
-- Make board more legible and user-friendly
-- Possible customisable board size and ship count/type?
+- Make board more legible and user-friendly 
+- Implement file reading for customisable board
 ### Play and complete game
 - ?
 ### Make a bot to automatically play against the player
 - Make algorithm strategically place ships down (or make sure they aren't in contact): Low priority
+    - Maybe increase in priority since at higher ship counts, the bot may be unable to place ships down. But damn, this'll be a real pain to code in since I'm certain it'll require so much math.
 ### Misc
 - Stop spam from console (or make it look better)
 - Optimisations
@@ -21,15 +22,18 @@ For more information (not that you care) you can visit the [wikipedia page here]
 
 ## COMPLETED TASKS:
 ### Make and setup board
-- User and computer can place ships on their respective boards + (Input validation)
+- User and computer can place ships on their respective boards + Input validation
 - User can view their board and the enemy board
+- Customisable board size (up to 26x26) and ship count/type
 ### Play and complete game
-- User can shoot at the computer's board + (Input validation)
+- User can shoot at the computer's board + Input validation
 - User can achieve a 'Game Over' when all their ships or the enemy ships have been sunk
 - Inform user when their ship/the enemy ship has been sunk
 - Input validation
 ### Make a bot to automatically play against the player
 - Computer can play the game in a very random manner. (for Easy difficulty)
 - Make algorithm track and sink a ship when it hits a cell with a ship on it. (for Normal+ difficulty)
-- Make algorithm decide the next best slot to shoot at (for Hard difficulty)
-- Expanding upon above: Make it work for stupid players who place ships in-contact with eachother
+- Make algorithm strategically decide next best slot to shoot at (for Hard difficulty)
+- Make algorithm murder anyone foolish enough to challenge them (for Impossible difficulty)
+## Misc
+- ?

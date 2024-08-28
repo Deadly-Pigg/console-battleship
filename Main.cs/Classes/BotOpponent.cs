@@ -2,7 +2,10 @@
 public class BotOpponent(Difficulty diff)
 {
     Difficulty Diff = diff; //difficulty of the bot
-    Random rand = new Random();
+    Random rand = new(); //basic decision maker for where the bot shoots
+    HashSet<(int,int)> hitCoords = new(); //used for tracking on medium+ difficulty. stores the coordinates of hit cells on a ship (that hasn't been sunk)
+    int[] currShips = []; //used for smart shooting on hard difficulty. stores the length of all ships
+    int minDist = 0; //smart shooting. stores the length of the shortest unsunk ship
     public GameState BotMove(BoardGen oppBoard) //selects appropriate algorithm based on the user's choice
     {
         switch(Diff)
@@ -30,14 +33,13 @@ public class BotOpponent(Difficulty diff)
         return fired;
     }
 
-    HashSet<(int,int)> hitCoords = new();
-    bool vertical = false;
+   
     private GameState Normal(BoardGen oppBoard)
     {
         GameState fired = (GameState)2; 
         if(hitCoords.Count > 0)
         {
-            fired = Tracking(oppBoard);
+            (_, fired) = Tracking(oppBoard);
         }
 
         int x = 0, y = 0;
@@ -57,9 +59,10 @@ public class BotOpponent(Difficulty diff)
 
         return fired;
     }
-    private GameState Tracking(BoardGen oppBoard) //used in medium/hard difficulties.
+    private (int, GameState) Tracking(BoardGen oppBoard) //used in medium/hard difficulties.
     {
         GameState fired = (GameState)2;
+        bool vertical = false;
         int x = 0, y = 0;
         int shoot = rand.Next(0,2);
         int len = 0;
@@ -130,38 +133,38 @@ public class BotOpponent(Difficulty diff)
                     hitCoords.Remove((vertical ? x : x + i, vertical ? y + i : y));
             }
         }
-        return fired;
+        return (len, fired);
     }
     /*
         HARD DIFFICULTY
     */
-    int[] currShips;
-    int minDist = 0;
     private GameState Hard(BoardGen oppBoard)
     {
+        
         GameState fired = (GameState)2; 
+        int currTargetLen = -1;
         if(hitCoords.Count > 0)
-            fired = Tracking(oppBoard);
+            (currTargetLen, fired) = Tracking(oppBoard);
 
         int x, y, boardVal;
         while((int)fired > 1)
         {
+            
             boardVal = rand.Next(0, oppBoard.boardSize * oppBoard.boardSize / minDist) * minDist;
             x = boardVal / oppBoard.boardSize;
             y = boardVal % oppBoard.boardSize;
-            (_, fired) = oppBoard.FireShot(x, y, oppBoard);
+            (currTargetLen, fired) = oppBoard.FireShot(x, y, oppBoard);
             if(fired == GameState.HIT)
-            {
                 hitCoords.Add((x,y));
-            }
         }
-
+        
         if(fired == GameState.SINK)
         {
-            currShips[minDist]--;
+            Console.WriteLine("start: " + minDist);
+            currShips[Math.Min(currShips.Length - 1, currTargetLen)]--;
             while(minDist < currShips.Length && currShips[minDist] == 0)
                 minDist++;
-            Console.WriteLine(minDist);
+            Console.WriteLine("end: " + minDist);
         }
 
         return fired;
@@ -171,7 +174,7 @@ public class BotOpponent(Difficulty diff)
         currShips = new int[boardSize];
 
         foreach(Ships.ShipType ship in ships.AllShips)
-            currShips[ship.Length-1] += ship.Count;
+            currShips[Math.Min(boardSize - 1, ship.Length)] += ship.Count;
 
         for(int i = 1; i < boardSize; i++)
         {
